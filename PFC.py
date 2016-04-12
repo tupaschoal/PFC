@@ -1,5 +1,6 @@
 #!/usr/local/bin/python3.5
 import os
+import shutil
 import subprocess
 import sys
 
@@ -31,8 +32,17 @@ try:
 except subprocess.CalledProcessError:
     sys.exit("Failed to run")
 
+# Copies project folder, inject failure, compile and saves log
+try:
+    shutil.copytree(chosenProject, "/tmp/fij")
+except shutil.Error:
+    sys.exit("Cannot copy tree")
+
 # Cleanup routines, delete logs and folders
 try:
     os.unlink(cleanLogPath)
-except OSErros:
+    shutil.rmtree("/tmp/fij")
+except OSError:
     sys.exit("Failed to clean files")
+except shutil.Error:
+    sys.exit("Failed to remove folder")
