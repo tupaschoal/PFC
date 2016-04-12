@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/local/bin/python3.5
 import subprocess
 import os
 
