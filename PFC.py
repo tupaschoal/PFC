@@ -4,13 +4,15 @@ import shutil
 import subprocess
 import sys
 
-chosenProject = \
-"/home/tuliolinux/Downloads/systemc-2.3.1/examples/sysc/simple_fifo"
+chosenProject = "simple_fifo"
+fullPath = \
+"/home/tuliolinux/Downloads/systemc-2.3.1/examples/sysc/"+chosenProject
 cleanLogPath = "/tmp/cleanBuildLog"
+fInjectedProj = "/tmp/fij"
 
 # Goes to project folder, compiles and saves log
 try:
-    os.chdir(chosenProject)
+    os.chdir(fullPath)
 except OSError:
     sys.exit("Failed to change directory")
 
@@ -20,7 +22,7 @@ except subprocess.CalledProcessError:
     sys.exit("Failed to compile")
 
 try:
-    out = subprocess.run("./simple_fifo.x", shell=True, check=True, \
+    out = subprocess.run("./"+chosenProject+".x", shell=True, check=True, \
                          stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     try:
         f = open(cleanLogPath,'w+b')
@@ -34,14 +36,14 @@ except subprocess.CalledProcessError:
 
 # Copies project folder, inject failure, compile and saves log
 try:
-    shutil.copytree(chosenProject, "/tmp/fij")
+    shutil.copytree(fullPath, fInjectedProj)
 except shutil.Error:
     sys.exit("Cannot copy tree")
 
 # Cleanup routines, delete logs and folders
 try:
     os.unlink(cleanLogPath)
-    shutil.rmtree("/tmp/fij")
+    shutil.rmtree(fInjectedProj)
 except OSError:
     sys.exit("Failed to clean files")
 except shutil.Error:
