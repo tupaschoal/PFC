@@ -4,7 +4,7 @@ import subprocess
 import sys
 
 chosenProject = \
-"/shome/tuliolinux/Downloads/systemc-2.3.1/examples/sysc/simple_fifo"
+"/home/tuliolinux/Downloads/systemc-2.3.1/examples/sysc/simple_fifo"
 
 # Goes to project folder, compiles and save log
 try:
