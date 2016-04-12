@@ -1,4 +1,5 @@
 #!/usr/local/bin/python3.5
+import filecmp
 import os
 import shutil
 import subprocess
@@ -10,6 +11,7 @@ fullPath = path+chosenProject
 cleanLogPath = "/tmp/cleanBuildLog"
 fInjectedLogPath = "/tmp/fInjectedBuildLog"
 fInjectedProj = path+"/fij"
+diffPath = "/tmp/diff"
 
 # Goes to project folder, compiles and saves log
 try:
@@ -63,9 +65,20 @@ try:
 except subprocess.CalledProcessError:
     sys.exit("Failed to run")
 
+# Make diff
+comparison = filecmp.cmp(cleanLogPath, fInjectedLogPath)
+try:
+    f = open(diffPath,'w')
+    f.write(str(comparison))
+    f.close()
+except OSError:
+    sys.exit("Failed to use file")
+
 # Cleanup routines, delete logs and folders
 try:
     os.unlink(cleanLogPath)
+    os.unlink(fInjectedLogPath)
+    os.unlink(diffPath)
     shutil.rmtree(fInjectedProj)
 except OSError:
     sys.exit("Failed to clean files")
