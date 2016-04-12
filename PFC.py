@@ -7,4 +7,5 @@ os.chdir(chosenProject)
 #subprocess.call(["cd", "-1", F])
 subprocess.call("ls")
 subprocess.call("make")
+subprocess.call("make")
 
