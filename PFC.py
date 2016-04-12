@@ -1,14 +1,18 @@
 #!/usr/local/bin/python3.5
-import subprocess
 import os
+import subprocess
+import sys
 
 chosenProject = \
-"/home/tuliolinux/Downloads/systemc-2.3.1/examples/sysc/simple_fifo"
+"/shome/tuliolinux/Downloads/systemc-2.3.1/examples/sysc/simple_fifo"
 
 # Goes to project folder, compiles and save log
-os.chdir(chosenProject)
-subprocess.run("ls", shell=True, check=True)
+try:
+    os.chdir(chosenProject)
+except OSError:
+    sys.exit("Failed to change directory")
+
 try:
     subprocess.run("make", shell=True, check=True)
-except subprocess.CalledProcessError as err:
-    print("Failed to compile")
+except subprocess.CalledProcessError:
+    sys.exit("Failed to compile")
