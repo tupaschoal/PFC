@@ -5,6 +5,7 @@ import sys
 
 chosenProject = \
 "/home/tuliolinux/Downloads/systemc-2.3.1/examples/sysc/simple_fifo"
+cleanLogPath = "/tmp/cleanBuildLog"
 
 # Goes to project folder, compiles and saves log
 try:
@@ -21,7 +22,7 @@ try:
     out = subprocess.run("./simple_fifo.x", shell=True, check=True, \
                          stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     try:
-        f = open('/tmp/cleanBuildLog','w+b')
+        f = open(cleanLogPath,'w+b')
         f.write(out.stdout)
         f.write(out.stderr)
         f.close()
@@ -29,3 +30,9 @@ try:
         sys.exit("Failed to use file")
 except subprocess.CalledProcessError:
     sys.exit("Failed to run")
+
+# Cleanup routines, delete logs and folders
+try:
+    os.unlink(cleanLogPath)
+except OSErros:
+    sys.exit("Failed to clean files")
