@@ -1,6 +1,7 @@
 #!/usr/local/bin/python3.5
 import filecmp
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -46,6 +47,8 @@ try:
     os.chdir(fInjectedProj)
 except OSError:
     sys.exit("Failed to change directory")
+
+regEx = re.compile('(?: ?((?:(?:un)?signed)?) int)[ \*&](\w+)[ ,\)]')
 
 try:
     subprocess.run("make", shell=True, check=True)
