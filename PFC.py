@@ -14,16 +14,28 @@ fInjectedLogPath = "/tmp/fInjectedBuildLog"
 fInjectedProj = path+"/fij"
 diffPath = "/tmp/diff"
 
+def cleanEnv(error):
+    try:
+        os.unlink(cleanLogPath)
+        os.unlink(fInjectedLogPath)
+        os.unlink(diffPath)
+        shutil.rmtree(fInjectedProj)
+    except OSError:
+        sys.exit("Failed to clean files")
+    except shutil.Error:
+        sys.exit("Failed to remove folder")
+    sys.exit(error)
+
 # Goes to project folder, compiles and saves log
 try:
     os.chdir(fullPath)
 except OSError:
-    sys.exit("Failed to change directory")
+    cleanEnv("Failed to change directory")
 
 try:
     subprocess.run("make", shell=True, check=True)
 except subprocess.CalledProcessError:
-    sys.exit("Failed to compile")
+    cleanEnv("Failed to compile")
 
 try:
     out = subprocess.run("./"+chosenProject+".x", shell=True, check=True, \
@@ -34,19 +46,19 @@ try:
         f.write(out.stderr)
         f.close()
     except OSError:
-        sys.exit("Failed to use file")
+        cleanEnv("Failed to use file")
 except subprocess.CalledProcessError:
-    sys.exit("Failed to run")
+    cleanEnv("Failed to run")
 
 # Copies project folder, inject failure, compile and saves log
 try:
     shutil.copytree(fullPath, fInjectedProj)
 except shutil.Error:
-    sys.exit("Cannot copy tree")
+    cleanEnv("Cannot copy tree")
 try:
     os.chdir(fInjectedProj)
 except OSError:
-    sys.exit("Failed to change directory")
+    cleanEnv("Failed to change directory")
 
 regEx = re.compile( #To match any variable declaration/definition
         '(int|float|short|char|bool'                    #C++ types
@@ -61,7 +73,7 @@ for i, line in enumerate(open(chosenProject+'.cpp')):
 try:
     subprocess.run("make", shell=True, check=True)
 except subprocess.CalledProcessError:
-    sys.exit("Failed to compile")
+    cleanEnv("Failed to compile Fault inject project")
 
 try:
     out = subprocess.run("./"+chosenProject+".x", shell=True, check=True, \
@@ -72,9 +84,9 @@ try:
         f.write(out.stderr)
         f.close()
     except OSError:
-        sys.exit("Failed to use file")
+        cleanEnv("Failed to use file")
 except subprocess.CalledProcessError:
-    sys.exit("Failed to run")
+    cleanEnv("Failed to run")
 
 # Make diff
 comparison = filecmp.cmp(cleanLogPath, fInjectedLogPath)
@@ -83,15 +95,7 @@ try:
     f.write(str(comparison))
     f.close()
 except OSError:
-    sys.exit("Failed to use file")
+    cleanEnv("Failed to use file")
 
 # Cleanup routines, delete logs and folders
-try:
-    os.unlink(cleanLogPath)
-    os.unlink(fInjectedLogPath)
-    os.unlink(diffPath)
-    shutil.rmtree(fInjectedProj)
-except OSError:
-    sys.exit("Failed to clean files")
-except shutil.Error:
-    sys.exit("Failed to remove folder")
+cleanEnv("Program ran successfully")
