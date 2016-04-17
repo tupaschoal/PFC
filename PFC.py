@@ -54,7 +54,7 @@ regEx = re.compile( #To match any variable declaration/definition
         '(?:[ \*&] *\*{0,2}&{0,1} *)'                   #Skip *&' '
         '([A-Z_a-z]\w*)'                                #Variable name
         '[ ,;\)\[\]]')                                  #Ending in =);,[]
-for i, line in enumerate(open('simple_fifo.cpp')):
+for i, line in enumerate(open(chosenProject+'.cpp')):
     for match in re.finditer(regEx, line):
         print('Found on line %s: %s' % (str(i+1), match.groups()))
 
