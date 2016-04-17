@@ -73,7 +73,7 @@ for i, line in enumerate(open(chosenProject+'.cpp')):
 try:
     subprocess.run("make", shell=True, check=True)
 except subprocess.CalledProcessError:
-    cleanEnv("Failed to compile Fault inject project")
+    cleanEnv("Failed to compile fault injected project")
 
 try:
     out = subprocess.run("./"+chosenProject+".x", shell=True, check=True, \
