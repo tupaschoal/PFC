@@ -48,7 +48,12 @@ try:
 except OSError:
     sys.exit("Failed to change directory")
 
-regEx = re.compile('(?: ?((?:(?:un)?signed)?) int)[ \*&](\w+)[ ,\)]')
+regEx = re.compile( #To match any variable declaration/definition
+        '(int|float|short|char|bool'                    #C++ types
+        '|sc_(?:bit|logic|int|uint|bigint|biguint))'    #SystemC types
+        '(?:[ \*&] *\*{0,2}&{0,1} *)'                   #Skip *&' '
+        '([A-Z_a-z]\w*)'                                #Variable name
+        '[ ,;\)\[\]]')                                  #Ending in =);,[]
 
 try:
     subprocess.run("make", shell=True, check=True)
