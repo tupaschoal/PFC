@@ -13,6 +13,7 @@ cleanLogPath = "/tmp/cleanBuildLog"
 fInjectedLogPath = "/tmp/fInjectedBuildLog"
 fInjectedProj = path+"/fij"
 diffPath = "/tmp/diff"
+debug = 1
 
 def cleanEnv(error):
     try:
@@ -66,9 +67,15 @@ regEx = re.compile( #To match any variable declaration/definition
         '(?:[ \*&] *\*{0,2}&{0,1} *)'                   #Skip *&' '
         '([A-Z_a-z]\w*)'                                #Variable name
         '[ ,;\)\[\]]')                                  #Ending in =);,[]
+
+listOfMatches = []
 for i, line in enumerate(open(chosenProject+'.cpp')):
-    for match in re.finditer(regEx, line):
-        print('Found on line %s: %s' % (str(i+1), match.groups()))
+    for match in re.finditer(regEx,line):
+        listOfMatches.append((i+1, match.groups()))
+
+if (debug == 1) :
+    for x in listOfMatches:
+            print(x[0], x[1])
 
 try:
     subprocess.run("make", shell=True, check=True)
