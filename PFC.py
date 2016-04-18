@@ -15,6 +15,9 @@ fInjectedProj = path+"/fij"
 diffPath = "/tmp/diff"
 debug = 1
 
+### Script Functions ###
+
+# Clean environment before exiting
 def cleanEnv(error):
     try:
         os.unlink(cleanLogPath)
@@ -26,6 +29,21 @@ def cleanEnv(error):
     except shutil.Error:
         sys.exit("Failed to remove folder")
     sys.exit(error)
+
+# Generates a random number based on type
+def randomValue(dataType):
+    if dataType == "char":
+        return 1;
+    elif dataType == "float":
+        return 2;
+    elif dataType == "short":
+        return 3;
+    elif dataType == "char" :
+        return 4;
+    elif dataType == "bool" :
+        return 5;
+    else :
+        return 0;
 
 # Goes to project folder, compiles and saves log
 try:
@@ -77,8 +95,9 @@ contents = []
 with open(chosenProject+'.cpp','r') as f:
     contents = f.readlines()
 
-i = 0;
-val = 5;
+i = 0
+dataType = listOfMatches[i][1][0]
+val = randomValue(dataType)
 injectedContent = "%s = %d;" % (listOfMatches[i][1][1], val)
 contents.insert(listOfMatches[i][0], injectedContent)
 
