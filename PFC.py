@@ -1,10 +1,11 @@
 #!/usr/local/bin/python3.5
-import filecmp
-import os
-import re
-import shutil
-import subprocess
-import sys
+import filecmp     #Compare execution outputs
+import os          #Change folders/create/copy/delete
+import random      #Choose line and values randomly
+import re          #Use regEx as search pattern
+import shutil      #Copy directories
+import subprocess  #Run shell commands
+import sys         #Exit with error code
 
 chosenProject = "simple_fifo"
 path = "/home/tuliolinux/Downloads/systemc-2.3.1/examples/sysc/"
