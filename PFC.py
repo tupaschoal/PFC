@@ -73,6 +73,16 @@ for i, line in enumerate(open(chosenProject+'.cpp')):
     for match in re.finditer(regEx,line):
         listOfMatches.append((i+1, match.groups()))
 
+contents = []
+with open(chosenProject+'.cpp','r') as f:
+    contents = f.readlines()
+
+contents.insert(63, "c = 5;")
+contents= "".join(contents)
+
+with open(chosenProject+'.cpp','w') as f:
+    f.write(contents)
+
 if (debug == 1) :
     for x in listOfMatches:
             print(x[0], x[1])
