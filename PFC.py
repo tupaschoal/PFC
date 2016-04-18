@@ -34,16 +34,19 @@ def cleanEnv(error):
 # Generates a random number based on type
 def randomValue(dataType):
     if dataType == "char":
-        return 1;
+        return random.getrandbits(8)
     elif dataType == "float":
-        return 2;
+        return random.random()
     elif dataType == "short":
-        return 3;
-    elif dataType == "char" :
-        return 4;
-    elif dataType == "bool" :
-        return 5;
-    else :
+        return random.getrandbits(16)
+    elif dataType == "int":
+        return random.getrandbits(32);
+    elif dataType == "bool":
+        if random.getrandbits(1) == 1:
+            return true
+        else:
+            return false
+    else:
         return 0;
 
 #### Main Script ####
