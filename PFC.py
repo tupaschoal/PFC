@@ -78,10 +78,9 @@ with open(chosenProject+'.cpp','r') as f:
     contents = f.readlines()
 
 contents.insert(63, "c = 5;")
-contents= "".join(contents)
 
 with open(chosenProject+'.cpp','w') as f:
-    f.write(contents)
+    f.writelines(contents)
 
 if (debug == 1) :
     for x in listOfMatches:
