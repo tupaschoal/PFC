@@ -45,6 +45,8 @@ def randomValue(dataType):
     else :
         return 0;
 
+#### Main Script ####
+
 # Goes to project folder, compiles and saves log
 try:
     os.chdir(fullPath)
