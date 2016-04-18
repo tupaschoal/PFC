@@ -77,7 +77,10 @@ contents = []
 with open(chosenProject+'.cpp','r') as f:
     contents = f.readlines()
 
-contents.insert(63, "c = 5;")
+i = 0;
+val = 5;
+injectedContent = "%s = %d;" % (listOfMatches[i][1][1], val)
+contents.insert(listOfMatches[i][0], injectedContent)
 
 with open(chosenProject+'.cpp','w') as f:
     f.writelines(contents)
