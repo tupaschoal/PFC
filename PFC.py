@@ -99,7 +99,12 @@ contents = []
 with open(chosenProject+'.cpp','r') as f:
     contents = f.readlines()
 
+chooseV = False
 i = 0
+while not chooseV:
+    i = random.randint(0, len(listOfMatches) -1)
+    chooseV = listOfMatches[i][1][1] != "sc_main"
+
 dataType = listOfMatches[i][1][0]
 val = randomValue(dataType)
 injectedContent = "%s = %d;" % (listOfMatches[i][1][1], val)
