@@ -34,18 +34,15 @@ def cleanEnv(error):
 # Generates a random number based on type
 def randomValue(dataType):
     if dataType == "char":
-        return random.getrandbits(8)
+        return random.randint(-128,127)
     elif dataType == "float":
         return random.random()
     elif dataType == "short":
-        return random.getrandbits(16)
+        return random.randint(-32768, 32767)
     elif dataType == "int":
-        return random.getrandbits(32);
+        return random.getrandbits(32)
     elif dataType == "bool":
-        if random.getrandbits(1) == 1:
-            return true
-        else:
-            return false
+        return random.randint(0,1)
     else:
         return 0;
 
@@ -105,6 +102,7 @@ i = 0
 dataType = listOfMatches[i][1][0]
 val = randomValue(dataType)
 injectedContent = "%s = %d;" % (listOfMatches[i][1][1], val)
+print("Inserting: %s" % injectedContent)
 contents.insert(listOfMatches[i][0], injectedContent)
 
 with open(chosenProject+'.cpp','w') as f:
