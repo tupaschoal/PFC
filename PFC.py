@@ -1,5 +1,6 @@
 #!/usr/local/bin/python3.5
 import filecmp     #Compare execution outputs
+import logging     #Ease use of debugging messages
 import os          #Change folders/create/copy/delete
 import random      #Choose line and values randomly
 import re          #Use regEx as search pattern
@@ -14,7 +15,6 @@ cleanLogPath = "/tmp/cleanBuildLog"
 fInjectedLogPath = "/tmp/fInjectedBuildLog"
 fInjectedProj = path+"/fij"
 diffPath = "/tmp/diff"
-debug = 1
 
 ### Script Functions ###
 
@@ -47,6 +47,7 @@ def randomValue(dataType):
         return 0;
 
 #### Main Script ####
+logging.basicConfig(stream=sys.stderr, level=logging.NOTSET)
 
 # Goes to project folder, compiles and saves log
 try:
@@ -102,15 +103,14 @@ i = 0
 dataType = listOfMatches[i][1][0]
 val = randomValue(dataType)
 injectedContent = "%s = %d;" % (listOfMatches[i][1][1], val)
-print("Inserting: %s" % injectedContent)
+logging.info(" Inserting: %s" % injectedContent)
 contents.insert(listOfMatches[i][0], injectedContent)
 
 with open(chosenProject+'.cpp','w') as f:
     f.writelines(contents)
 
-if (debug == 1) :
-    for x in listOfMatches:
-            print(x[0], x[1])
+for x in listOfMatches:
+    logging.info(" L: %d (T: %s V: %s)" % (x[0], x[1][0], x[1][1]))
 
 try:
     subprocess.run("make", shell=True, check=True)
