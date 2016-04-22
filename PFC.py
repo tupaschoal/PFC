@@ -41,8 +41,15 @@ def randomValue(dataType):
         return random.randint(-32768, 32767)
     elif dataType == "int":
         return random.getrandbits(32)
-    elif dataType == "bool":
+    elif (dataType == "sc_int"    or \
+          dataType == "sc_uint"   or \
+          dataType == "sc_bigint" or \
+          dataType == "sc_biguint"):
+        return random.getrandbits(64)
+    elif (dataType == "bool" or dataType == "sc_bit"):
         return random.randint(0,1)
+    elif dataType == "sc_logic":
+        return random.choice('01xz')
     else:
         return 0;
 
