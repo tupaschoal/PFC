@@ -8,7 +8,7 @@ import shutil      #Copy directories
 import subprocess  #Run shell commands
 import sys         #Exit with error code
 
-chosenProject = "simple_fifo"
+chosenProject = "rsa"
 path = "/home/tuliolinux/Downloads/systemc-2.3.1/examples/sysc/"
 fullPath = path+chosenProject
 cleanLogPath = "/tmp/cleanBuildLog"
@@ -121,12 +121,16 @@ while not chooseV:
     chooseV = listOfMatches[i][1][2] != "sc_main" and\
               listOfMatches[i][1][0] != "const "
 
+line = listOfMatches[i][0]
 hasConst = listOfMatches[i][1][0]
 dataType = listOfMatches[i][1][1]
+varName = listOfMatches[i][1][2]
 val = randomValue(dataType)
-injectedContent = "%s = %d;" % (listOfMatches[i][1][2], val)
-logging.info(" Inserting: %s" % injectedContent)
-contents.insert(listOfMatches[i][0], injectedContent)
+injectedContent = "%s = %d;" % (varName, val)
+if re.search('\{', contents[line]):
+    line += 1
+logging.info(" Inserting: %s into line %s" % (injectedContent, str(line)))
+contents.insert(line, injectedContent)
 
 with open(chosenProject+'.cpp','w') as f:
     f.writelines(contents)
