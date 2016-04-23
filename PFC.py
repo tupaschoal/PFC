@@ -111,7 +111,8 @@ chooseV = False
 i = 0
 while not chooseV:
     i = random.randint(0, len(listOfMatches) -1)
-    chooseV = listOfMatches[i][1][2] != "sc_main"
+    chooseV = listOfMatches[i][1][2] != "sc_main" and\
+              listOfMatches[i][1][0] != "const "
 
 hasConst = listOfMatches[i][1][0]
 dataType = listOfMatches[i][1][1]
