@@ -48,7 +48,8 @@ def randomValue(dataType):
         return random.randint(-32768, 32767)
     elif dataType == "int":
         return random.getrandbits(32)
-    elif (dataType == "sc_int"    or \
+    elif (dataType == "bigint"    or \
+          dataType == "sc_int"    or \
           dataType == "sc_uint"   or \
           dataType == "sc_bigint" or \
           dataType == "sc_biguint"):
@@ -99,8 +100,9 @@ except OSError:
 
 regEx = re.compile( #To match any variable declaration/definition
         '(const )?'
-        '(int|float|short|char|bool'                    #C++ types
+        '(bigint|int|float|short|char|bool'             #C++ types
         '|sc_(?:bit|logic|int|uint|bigint|biguint))'    #SystemC types
+        '(?:\<\w*\>)?'                                  #Support bigint templates
         '(?:[ \*&] *\*{0,2}&{0,1} *)'                   #Skip *&' '
         '([A-Z_a-z]\w*)'                                #Variable name
         '[ ,;\)\[\]]')                                  #Ending in =);,[]
