@@ -91,6 +91,7 @@ except OSError:
     cleanEnv("Failed to change directory")
 
 regEx = re.compile( #To match any variable declaration/definition
+        '(const )?'
         '(int|float|short|char|bool'                    #C++ types
         '|sc_(?:bit|logic|int|uint|bigint|biguint))'    #SystemC types
         '(?:[ \*&] *\*{0,2}&{0,1} *)'                   #Skip *&' '
@@ -110,11 +111,12 @@ chooseV = False
 i = 0
 while not chooseV:
     i = random.randint(0, len(listOfMatches) -1)
-    chooseV = listOfMatches[i][1][1] != "sc_main"
+    chooseV = listOfMatches[i][1][2] != "sc_main"
 
-dataType = listOfMatches[i][1][0]
+hasConst = listOfMatches[i][1][0]
+dataType = listOfMatches[i][1][1]
 val = randomValue(dataType)
-injectedContent = "%s = %d;" % (listOfMatches[i][1][1], val)
+injectedContent = "%s = %d;" % (listOfMatches[i][1][2], val)
 logging.info(" Inserting: %s" % injectedContent)
 contents.insert(listOfMatches[i][0], injectedContent)
 
@@ -122,7 +124,7 @@ with open(chosenProject+'.cpp','w') as f:
     f.writelines(contents)
 
 for x in listOfMatches:
-    logging.info(" L: %d (T: %s V: %s)" % (x[0], x[1][0], x[1][1]))
+    logging.info(" L: %d (C: %s T: %s V: %s)" % (x[0], x[1][0], x[1][1],x[1][2]))
 
 try:
     subprocess.run("make", shell=True, check=True)
