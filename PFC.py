@@ -141,8 +141,10 @@ for x in listOfMatches:
     logging.info(" L: %d (C: %s T: %s V: %s)" % (x[0], x[1][0], x[1][1],x[1][2]))
 
 try:
-    subprocess.run("make", shell=True, check=True)
-except subprocess.CalledProcessError:
+    subprocess.run("make", shell=True, check=True, \
+                   stderr=subprocess.PIPE)
+except subprocess.CalledProcessError as e:
+    sys.stderr.buffer.write(e.stderr)
     cleanEnv("Failed to compile fault injected project")
 
 try:
