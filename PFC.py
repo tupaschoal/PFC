@@ -53,7 +53,7 @@ def randomValue(dataType):
           dataType == "sc_uint"   or \
           dataType == "sc_bigint" or \
           dataType == "sc_biguint"):
-        return random.getrandbits(64)
+        return random.getrandbits(63)
     elif (dataType == "bool" or dataType == "sc_bit"):
         return random.randint(0,1)
     elif dataType == "sc_logic":
