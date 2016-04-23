@@ -18,13 +18,20 @@ diffPath = "/tmp/diff"
 
 ### Script Functions ###
 
+def cleanFileOrDir(path):
+    if os.path.isfile(path):
+        os.unlink(path)
+    elif os.path.isdir(path):
+        shutil.rmtree(path)
+
+
 # Clean environment before exiting
 def cleanEnv(error):
     try:
-        os.unlink(cleanLogPath)
-        os.unlink(fInjectedLogPath)
-        os.unlink(diffPath)
-        shutil.rmtree(fInjectedProj)
+        cleanFileOrDir(cleanLogPath)
+        cleanFileOrDir(fInjectedLogPath)
+        cleanFileOrDir(diffPath)
+        cleanFileOrDir(fInjectedProj)
     except OSError:
         sys.exit("Failed to clean files")
     except shutil.Error:
