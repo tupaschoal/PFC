@@ -144,6 +144,7 @@ if re.search('\{', contents[line]):
     line += 1
 logging.info(" Inserting: %s into line %s" % (injectedContent, str(line)))
 contents.insert(line, injectedContent)
+contents.extend(randomBool)
 
 with open(chosenProject+'.cpp','w') as f:
     f.writelines(contents)
