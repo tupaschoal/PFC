@@ -16,6 +16,17 @@ fInjectedLogPath = "/tmp/fInjectedBuildLog"
 fInjectedProj = path+"/fij"
 diffPath = "/tmp/diff"
 
+randomBool = [  "#include <stdlib.h>", \
+                "#include <time.h>", \
+                "static bool init = false;", \
+                "bool randomBool() {", \
+                    "if (!init) { ", \
+                        "srand ( time(NULL) );", \
+                        "init = true;", \
+                    "}", \
+                    "return rand() % 2 == 1;", \
+                "}"]
+
 ### Script Functions ###
 
 def cleanFileOrDir(path):
