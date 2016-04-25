@@ -139,7 +139,7 @@ hasConst = listOfMatches[i][1][0]
 dataType = listOfMatches[i][1][1]
 varName = listOfMatches[i][1][2]
 val = randomValue(dataType)
-injectedContent = "%s = randomBool() ? %d : %s;" % (varName, val, varName)
+injectedContent = "%s = randomBool() ? %d : %s;\n" % (varName, val, varName)
 if re.search('\{', contents[line]):
     line += 1
 logging.info(" Inserting: %s into line %s" % (injectedContent, str(line)))
