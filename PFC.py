@@ -139,15 +139,17 @@ hasConst = listOfMatches[i][1][0]
 dataType = listOfMatches[i][1][1]
 varName = listOfMatches[i][1][2]
 val = randomValue(dataType)
-injectedContent = "%s = %d;" % (varName, val)
+injectedContent = "%s = randomBool() ? %d : %s;" % (varName, val, varName)
 if re.search('\{', contents[line]):
     line += 1
 logging.info(" Inserting: %s into line %s" % (injectedContent, str(line)))
 contents.insert(line, injectedContent)
-contents.extend(randomBool)
+maliciousFile = []
+maliciousFile.extend(randomBool)
+maliciousFile.extend(contents)
 
 with open(chosenProject+'.cpp','w') as f:
-    f.writelines(contents)
+    f.writelines(maliciousFile)
 
 for x in listOfMatches:
     logging.info(" L: %d (C: %s T: %s V: %s)" % (x[0], x[1][0], x[1][1],x[1][2]))
