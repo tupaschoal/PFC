@@ -16,16 +16,16 @@ fInjectedLogPath = "/tmp/fInjectedBuildLog"
 fInjectedProj = path+"/fij"
 diffPath = "/tmp/diff"
 
-randomBool = [  "#include <stdlib.h>", \
-                "#include <time.h>", \
-                "static bool init = false;", \
-                "bool randomBool() {", \
-                    "if (!init) { ", \
-                        "srand ( time(NULL) );", \
-                        "init = true;", \
-                    "}", \
-                    "return rand() % 2 == 1;", \
-                "}"]
+randomBool = [  "#include <stdlib.h>\n", \
+                "#include <time.h>\n", \
+                "static bool init = false;\n", \
+                "bool randomBool() {\n", \
+                "   if (!init) { \n", \
+                "       srand ( time(NULL) );\n", \
+                "       init = true;\n", \
+                "   }\n", \
+                "   return rand() % 2 == 1;\n", \
+                "}\n"]
 
 ### Script Functions ###
 
