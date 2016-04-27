@@ -72,14 +72,22 @@ def randomValue(dataType):
     else:
         return 0;
 
+# Traverse the path received and returns the first Makefile found
+def findMakefile(walkingPath):
+    for root, dirs, files in os.walk(walkingPath):
+        for file in files:
+            if file.endswith("Makefile"):
+                return root
+
 #### Main Script ####
 logging.basicConfig(stream=sys.stderr, level=logging.NOTSET)
 
 # Goes to project folder, compiles and saves log
+compilePath = findMakefile(fullPath)
 try:
-    os.chdir(fullPath)
+    os.chdir(compilePath)
 except OSError:
-    cleanEnv("Failed to change directory")
+    cleanEnv("Failed to change to directory %s" % compilePath)
 
 try:
     subprocess.run("make", shell=True, check=True)
@@ -107,7 +115,7 @@ except shutil.Error:
 try:
     os.chdir(fInjectedProj)
 except OSError:
-    cleanEnv("Failed to change directory")
+    cleanEnv("Failed to change to directory %s" % fInjectedProj)
 
 regEx = re.compile( #To match any variable declaration/definition
         '(const )?'
@@ -153,6 +161,12 @@ with open(chosenProject+'.cpp','w') as f:
 
 for x in listOfMatches:
     logging.info(" L: %d (C: %s T: %s V: %s)" % (x[0], x[1][0], x[1][1],x[1][2]))
+
+compilePath = findMakefile(fInjectedProj)
+try:
+    os.chdir(compilePath)
+except OSError:
+    cleanEnv("Failed to change to directory %s" % compilePath)
 
 try:
     subprocess.run("make", shell=True, check=True, \
