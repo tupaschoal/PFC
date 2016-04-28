@@ -7,6 +7,7 @@ import re          #Use regEx as search pattern
 import shutil      #Copy directories
 import subprocess  #Run shell commands
 import sys         #Exit with error code
+from collections import namedtuple
 
 chosenProject = "rsa"
 path = "/home/tuliolinux/Downloads/systemc-2.3.1/examples/sysc/"
@@ -26,6 +27,8 @@ randomBool = [  "#include <stdlib.h>\n", \
                 "   }\n", \
                 "   return rand() % 2 == 1;\n", \
                 "}\n"]
+
+walkReturn = namedtuple('walkReturn', 'root, file')
 
 ### Script Functions ###
 
@@ -73,17 +76,17 @@ def randomValue(dataType):
         return 0;
 
 # Traverse the path received and returns the first Makefile found
-def findFirstMakefile(walkingPath):
+def findFirstFile(walkingPath, fileToFind):
     for root, dirs, files in os.walk(walkingPath):
         for file in files:
-            if file.endswith("Makefile"):
-                return root
+            if file.endswith(fileToFind):
+                return walkReturn(root, file)
 
 #### Main Script ####
 logging.basicConfig(stream=sys.stderr, level=logging.NOTSET)
 
 # Goes to project folder, compiles and saves log
-compilePath = findFirstMakefile(fullPath)
+compilePath = findFirstFile(fullPath, "Makefile").root
 try:
     os.chdir(compilePath)
 except OSError:
@@ -95,7 +98,7 @@ except subprocess.CalledProcessError:
     cleanEnv("Failed to compile")
 
 try:
-    out = subprocess.run("./"+chosenProject+".x", check=True, \
+    out = subprocess.run("./"+findFirstFile(fullPath, ".x").file, check=True, \
                          stdout=subprocess.PIPE, stderr=subprocess.PIPE, \
                          timeout=20)
     try:
@@ -165,7 +168,7 @@ with open(chosenProject+'.cpp','w') as f:
 for x in listOfMatches:
     logging.info(" L: %d (C: %s T: %s V: %s)" % (x[0], x[1][0], x[1][1],x[1][2]))
 
-compilePath = findFirstMakefile(fInjectedProj)
+compilePath = findFirstFile(fInjectedProj, "Makefile").root
 try:
     os.chdir(compilePath)
 except OSError:
@@ -179,7 +182,7 @@ except subprocess.CalledProcessError as e:
     cleanEnv("Failed to compile fault injected project")
 
 try:
-    out = subprocess.run("./"+chosenProject+".x", check=True, \
+    out = subprocess.run("./"+findFirstFile(fInjectedProj, ".x").file, check=True, \
                          stdout=subprocess.PIPE, stderr=subprocess.PIPE, \
                          timeout=20)
     try:
