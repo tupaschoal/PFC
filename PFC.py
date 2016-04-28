@@ -96,7 +96,8 @@ except subprocess.CalledProcessError:
 
 try:
     out = subprocess.run("./"+chosenProject+".x", shell=True, check=True, \
-                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE, \
+                         timeout=20)
     try:
         f = open(cleanLogPath,'w+b')
         f.write(out.stdout)
@@ -104,6 +105,8 @@ try:
         f.close()
     except OSError:
         cleanEnv("Failed to use file")
+except subprocess.TimeoutExpired:
+    cleanEnv("Process ended with timeout")
 except subprocess.CalledProcessError:
     cleanEnv("Failed to run")
 
@@ -177,7 +180,8 @@ except subprocess.CalledProcessError as e:
 
 try:
     out = subprocess.run("./"+chosenProject+".x", shell=True, check=True, \
-                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE, \
+                         timeout=20)
     try:
         f = open(fInjectedLogPath,'w+b')
         f.write(out.stdout)
@@ -185,6 +189,8 @@ try:
         f.close()
     except OSError:
         cleanEnv("Failed to use file")
+except subprocess.TimeoutExpired:
+    cleanEnv("Process ended with timeout")
 except subprocess.CalledProcessError:
     cleanEnv("Failed to run")
 
