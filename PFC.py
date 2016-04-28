@@ -73,7 +73,7 @@ def randomValue(dataType):
         return 0;
 
 # Traverse the path received and returns the first Makefile found
-def findMakefile(walkingPath):
+def findFirstMakefile(walkingPath):
     for root, dirs, files in os.walk(walkingPath):
         for file in files:
             if file.endswith("Makefile"):
@@ -83,7 +83,7 @@ def findMakefile(walkingPath):
 logging.basicConfig(stream=sys.stderr, level=logging.NOTSET)
 
 # Goes to project folder, compiles and saves log
-compilePath = findMakefile(fullPath)
+compilePath = findFirstMakefile(fullPath)
 try:
     os.chdir(compilePath)
 except OSError:
@@ -165,7 +165,7 @@ with open(chosenProject+'.cpp','w') as f:
 for x in listOfMatches:
     logging.info(" L: %d (C: %s T: %s V: %s)" % (x[0], x[1][0], x[1][1],x[1][2]))
 
-compilePath = findMakefile(fInjectedProj)
+compilePath = findFirstMakefile(fInjectedProj)
 try:
     os.chdir(compilePath)
 except OSError:
