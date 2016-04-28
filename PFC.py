@@ -90,12 +90,12 @@ except OSError:
     cleanEnv("Failed to change to directory %s" % compilePath)
 
 try:
-    subprocess.run("make", shell=True, check=True)
+    subprocess.run("make", check=True)
 except subprocess.CalledProcessError:
     cleanEnv("Failed to compile")
 
 try:
-    out = subprocess.run("./"+chosenProject+".x", shell=True, check=True, \
+    out = subprocess.run("./"+chosenProject+".x", check=True, \
                          stdout=subprocess.PIPE, stderr=subprocess.PIPE, \
                          timeout=20)
     try:
@@ -172,14 +172,14 @@ except OSError:
     cleanEnv("Failed to change to directory %s" % compilePath)
 
 try:
-    subprocess.run("make", shell=True, check=True, \
+    subprocess.run("make", check=True, \
                    stderr=subprocess.PIPE)
 except subprocess.CalledProcessError as e:
     sys.stderr.buffer.write(e.stderr)
     cleanEnv("Failed to compile fault injected project")
 
 try:
-    out = subprocess.run("./"+chosenProject+".x", shell=True, check=True, \
+    out = subprocess.run("./"+chosenProject+".x", check=True, \
                          stdout=subprocess.PIPE, stderr=subprocess.PIPE, \
                          timeout=20)
     try:
