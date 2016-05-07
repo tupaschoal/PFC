@@ -25,7 +25,7 @@ randomBool = [  "#include <stdlib.h>\n", \
                 "       srand ( time(NULL) );\n", \
                 "       init = true;\n", \
                 "   }\n", \
-                "   return rand() % 2 == 1;\n", \
+                "   return rand() % 1 == 0;\n", \
                 "}\n"]
 
 walkReturn = namedtuple('walkReturn', 'root, file')
