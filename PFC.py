@@ -9,6 +9,8 @@ import subprocess  #Run shell commands
 import sys         #Exit with error code
 from collections import namedtuple
 
+#chosenProject = "at_1_phase"
+#path = "/home/tuliolinux/Downloads/systemc-2.3.1/examples/tlm-seg/"
 chosenProject = "rsa"
 path = "/home/tuliolinux/Downloads/systemc-2.3.1/examples/sysc/"
 fullPath = path+chosenProject
@@ -51,7 +53,8 @@ def cleanEnv(error):
         sys.exit("Failed to clean files")
     except shutil.Error:
         sys.exit("Failed to remove folder")
-    sys.exit(error)
+    if (error):
+        sys.exit(error)
 
 # Generates a random number based on type
 def randomValue(dataType):
@@ -85,6 +88,7 @@ def findFirstFile(walkingPath, fileToFind):
 
 #### Main Script ####
 logging.basicConfig(stream=sys.stderr, level=logging.NOTSET)
+cleanEnv(0)
 
 # Goes to project folder, compiles and saves log
 compilePath = findFirstFile(fullPath, "Makefile").root
@@ -134,7 +138,8 @@ regEx = re.compile( #To match any variable declaration/definition
         '[ ,;\)\[\]]')                                  #Ending in =);,[]
 
 listOfMatches = []
-for i, line in enumerate(open(chosenProject+'.cpp')):
+cppFile = findFirstFile(path, '.cpp')
+for i, line in enumerate(open(chosenProject+".cpp")):
     for match in re.finditer(regEx,line):
         listOfMatches.append((i+1, match.groups()))
 
