@@ -16,6 +16,7 @@ cleanLogPath = "/tmp/cleanBuildLog"
 fInjectedLogPath = "/tmp/fInjectedBuildLog"
 fInjectedProj = path+"/fij"
 diffPath = "/tmp/diff"
+d = 2
 
 randomBool = [  "#include <stdlib.h>\n", \
                 "#include <time.h>\n", \
@@ -25,7 +26,7 @@ randomBool = [  "#include <stdlib.h>\n", \
                 "       srand ( time(NULL) );\n", \
                 "       init = true;\n", \
                 "   }\n", \
-                "   return rand() % 1 == 0;\n", \
+                "   return rand() %"+str(d)+"== 0;\n", \
                 "}\n"]
 
 walkReturn = namedtuple('walkReturn', 'root, file')
