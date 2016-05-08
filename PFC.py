@@ -9,10 +9,10 @@ import subprocess  #Run shell commands
 import sys         #Exit with error code
 from collections import namedtuple
 
-#chosenProject = "at_1_phase"
-#path = "/home/tuliolinux/Downloads/systemc-2.3.1/examples/tlm-seg/"
-chosenProject = "rsa"
-path = "/home/tuliolinux/Downloads/systemc-2.3.1/examples/sysc/"
+chosenProject = "at_1_phase"
+path = "/home/tuliolinux/Downloads/systemc-2.3.1/examples/tlm-seg/"
+#chosenProject = "rsa"
+#path = "/home/tuliolinux/Downloads/systemc-2.3.1/examples/sysc/"
 fullPath = path+chosenProject
 cleanLogPath = "/tmp/cleanBuildLog"
 fInjectedLogPath = "/tmp/fInjectedBuildLog"
@@ -40,7 +40,6 @@ def cleanFileOrDir(path):
         os.unlink(path)
     elif os.path.isdir(path):
         shutil.rmtree(path)
-
 
 # Clean environment before exiting
 def cleanEnv(error):
@@ -79,12 +78,20 @@ def randomValue(dataType):
     else:
         return 0;
 
-# Traverse the path received and returns the first Makefile found
+# Traverse the path received and returns the first file found
 def findFirstFile(walkingPath, fileToFind):
     for root, dirs, files in os.walk(walkingPath):
         for file in files:
             if file.endswith(fileToFind):
                 return walkReturn(root, file)
+
+
+# Change directory or finish with exception
+def changeDir(path):
+    try:
+        os.chdir(path)
+    except OSError:
+        cleanEnv("Failed to change to directory %s" % path)
 
 #### Main Script ####
 logging.basicConfig(stream=sys.stderr, level=logging.NOTSET)
@@ -92,10 +99,7 @@ cleanEnv(0)
 
 # Goes to project folder, compiles and saves log
 compilePath = findFirstFile(fullPath, "Makefile").root
-try:
-    os.chdir(compilePath)
-except OSError:
-    cleanEnv("Failed to change to directory %s" % compilePath)
+changeDir(compilePath)
 
 try:
     subprocess.run("make", check=True)
@@ -123,10 +127,7 @@ try:
     shutil.copytree(fullPath, fInjectedProj)
 except shutil.Error:
     cleanEnv("Cannot copy tree")
-try:
-    os.chdir(fInjectedProj)
-except OSError:
-    cleanEnv("Failed to change to directory %s" % fInjectedProj)
+changeDir(fInjectedProj)
 
 regEx = re.compile( #To match any variable declaration/definition
         '(const )?'
@@ -139,12 +140,12 @@ regEx = re.compile( #To match any variable declaration/definition
 
 listOfMatches = []
 cppFile = findFirstFile(path, '.cpp')
-for i, line in enumerate(open(chosenProject+".cpp")):
+for i, line in enumerate(open("src/"+chosenProject+".cpp")):
     for match in re.finditer(regEx,line):
         listOfMatches.append((i+1, match.groups()))
 
 contents = []
-with open(chosenProject+'.cpp','r') as f:
+with open("src/"+chosenProject+'.cpp','r') as f:
     contents = f.readlines()
 
 chooseV = False
@@ -168,17 +169,14 @@ maliciousFile = []
 maliciousFile.extend(randomBool)
 maliciousFile.extend(contents)
 
-with open(chosenProject+'.cpp','w') as f:
+with open("src/"+chosenProject+'.cpp','w') as f:
     f.writelines(maliciousFile)
 
 for x in listOfMatches:
     logging.info(" L: %d (C: %s T: %s V: %s)" % (x[0], x[1][0], x[1][1],x[1][2]))
 
 compilePath = findFirstFile(fInjectedProj, "Makefile").root
-try:
-    os.chdir(compilePath)
-except OSError:
-    cleanEnv("Failed to change to directory %s" % compilePath)
+changeDir(compilePath)
 
 try:
     subprocess.run("make", check=True, \
