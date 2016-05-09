@@ -118,6 +118,13 @@ def compileRunAndSaveLog(fullPath, cleanLogPath):
     except subprocess.CalledProcessError:
         cleanEnv("Failed to run")
 
+# Get file content
+def getFileContent(filePath):
+    contents = []
+    with open(filePath) as f:
+        contents = f.readlines()
+    return contents
+
 #### Main Script ####
 logging.basicConfig(stream=sys.stderr, level=logging.NOTSET)
 cleanEnv(0)
@@ -148,9 +155,7 @@ for i, line in enumerate(open("src/"+chosenProject+".cpp")):
     for match in re.finditer(regEx,line):
         listOfMatches.append((i+1, match.groups()))
 
-contents = []
-with open("src/"+chosenProject+'.cpp','r') as f:
-    contents = f.readlines()
+contents = getFileContent("src/"+chosenProject+'.cpp')
 
 chooseV = False
 i = 0
