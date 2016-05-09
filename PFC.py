@@ -136,7 +136,7 @@ def parseFileWithRegEx(regEx, path):
             listOfMatches.append((i+1, match.groups()))
     return listOfMatches
 
-
+# Create malicious file by injecting fault at line of original
 def createMaliciousFile(original, line, injectedContent):
     contents = original
     if re.search('\{', contents[line]):
@@ -148,10 +148,12 @@ def createMaliciousFile(original, line, injectedContent):
     maliciousFile.extend(contents)
     return maliciousFile
 
+# Overwrite a file with the malicious code
 def writeMaliciousFile(path):
     with open(path,'w') as f:
         f.writelines(maliciousFile)
 
+# Returns a regular expression given an enum value
 def getRegExFromEnum(category):
     if (category == RegExType.cppVariables):
         regEx = re.compile( #To match any variable declaration/definition
@@ -192,7 +194,6 @@ while not chooseV:
               listOfMatches[i][1][0] != "const "
 
 line = listOfMatches[i][0]
-hasConst = listOfMatches[i][1][0]
 dataType = listOfMatches[i][1][1]
 varName = listOfMatches[i][1][2]
 val = randomValue(dataType)
