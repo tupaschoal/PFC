@@ -125,6 +125,14 @@ def getFileContent(filePath):
         contents = f.readlines()
     return contents
 
+# Get regEx matched lines
+def parseFileWithRegEx(regEx, path):
+    listOfMatches = []
+    for i, line in enumerate(open(path)):
+        for match in re.finditer(regEx,line):
+            listOfMatches.append((i+1, match.groups()))
+    return listOfMatches
+
 #### Main Script ####
 logging.basicConfig(stream=sys.stderr, level=logging.NOTSET)
 cleanEnv(0)
@@ -150,11 +158,7 @@ regEx = re.compile( #To match any variable declaration/definition
         '([A-Z_a-z]\w*)'                                #Variable name
         '[ ,;\)\[\]]')                                  #Ending in =);,[]
 
-listOfMatches = []
-for i, line in enumerate(open("src/"+chosenProject+".cpp")):
-    for match in re.finditer(regEx,line):
-        listOfMatches.append((i+1, match.groups()))
-
+listOfMatches = parseFileWithRegEx(regEx, "src/"+chosenProject+".cpp")
 contents = getFileContent("src/"+chosenProject+'.cpp')
 
 chooseV = False
