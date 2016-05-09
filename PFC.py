@@ -133,6 +133,22 @@ def parseFileWithRegEx(regEx, path):
             listOfMatches.append((i+1, match.groups()))
     return listOfMatches
 
+
+def createMaliciousFile(original, line, injectedContent):
+    contents = original
+    if re.search('\{', contents[line]):
+        line += 1
+    logging.info(" Inserting: %s into line %s" % (injectedContent, str(line)))
+    contents.insert(line, injectedContent)
+    maliciousFile = []
+    maliciousFile.extend(randomBool)
+    maliciousFile.extend(contents)
+    return maliciousFile
+
+def writeMaliciousFile(path):
+    with open(path,'w') as f:
+        f.writelines(maliciousFile)
+
 #### Main Script ####
 logging.basicConfig(stream=sys.stderr, level=logging.NOTSET)
 cleanEnv(0)
@@ -174,16 +190,8 @@ dataType = listOfMatches[i][1][1]
 varName = listOfMatches[i][1][2]
 val = randomValue(dataType)
 injectedContent = "%s = randomBool() ? %d : %s;\n" % (varName, val, varName)
-if re.search('\{', contents[line]):
-    line += 1
-logging.info(" Inserting: %s into line %s" % (injectedContent, str(line)))
-contents.insert(line, injectedContent)
-maliciousFile = []
-maliciousFile.extend(randomBool)
-maliciousFile.extend(contents)
-
-with open("src/"+chosenProject+'.cpp','w') as f:
-    f.writelines(maliciousFile)
+maliciousFile = createMaliciousFile(contents, line, injectedContent)
+writeMaliciousFile("src/"+chosenProject+'.cpp')
 
 for x in listOfMatches:
     logging.info(" L: %d (C: %s T: %s V: %s)" % (x[0], x[1][0], x[1][1],x[1][2]))
