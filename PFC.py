@@ -90,6 +90,15 @@ def findFirstFile(walkingPath, fileToFind):
             if file.endswith(fileToFind):
                 return walkReturn(root, file)
 
+# Traverse the path received and returns all matching files
+def findAllFiles(walkingPath, fileToFind):
+    rFiles = []
+    for root, dirs, files in os.walk(walkingPath):
+        for file in files:
+            if file.endswith(fileToFind):
+                print(root, file)
+                rFiles.append(walkReturn(root, file))
+    return rFiles
 
 # Change directory or finish with exception
 def changeDir(path):
