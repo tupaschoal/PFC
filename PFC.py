@@ -12,12 +12,12 @@ from enum import Enum #To list regEx types
 
 chosenProject = "at_1_phase"
 path = "/home/tuliolinux/Downloads/systemc-2.3.1/examples/tlm-seg/"
-#chosenProject = "rsa"
-#path = "/home/tuliolinux/Downloads/systemc-2.3.1/examples/sysc/"
+chosenProject = "rsa"
+path = "/home/tuliolinux/Downloads/systemc-2.3.1/examples/sysc/"
 fullPath = path+chosenProject
 cleanLogPath = "/tmp/cleanBuildLog"
 fInjectedLogPath = "/tmp/fInjectedBuildLog"
-fInjectedProj = path+"/fij"
+fInjectedProj = path+"fij"
 diffPath = "/tmp/diff"
 d = 2
 
@@ -233,19 +233,23 @@ except shutil.Error:
     cleanEnv("Cannot copy tree")
 changeDir(fInjectedProj)
 
-regEx = getRegExFromEnum(RegExType.cppVariables)
-listOfMatches = parseFileWithRegEx(regEx, "src/"+chosenProject+".cpp")
-contents = getFileContent("src/"+chosenProject+'.cpp')
-injectionData = getRandomDataToInject(listOfMatches, RegExType.cppVariables)
-maliciousFile = createMaliciousFile(contents, injectionData.line, injectionData.data)
-writeMaliciousFile("src/"+chosenProject+'.cpp')
+rFiles = findAllFiles(fInjectedProj, ".cpp")
 
-for x in listOfMatches:
-    logging.info(" L: %d (C: %s T: %s V: %s)" % (x[0], x[1][0], x[1][1],x[1][2]))
+for element in rFiles:
+    chosenFile = element.root + "/" + element.file
+    regEx = getRegExFromEnum(RegExType.cppVariables)
+    listOfMatches = parseFileWithRegEx(regEx, chosenFile)
+    contents = getFileContent(chosenFile)
+    injectionData = getRandomDataToInject(listOfMatches, RegExType.cppVariables)
+    maliciousFile = createMaliciousFile(contents, injectionData.line, injectionData.data)
+    writeMaliciousFile(chosenFile)
 
-compilePath = findFirstFile(fInjectedProj, "Makefile").root
-changeDir(compilePath)
-compileRunAndSaveLog(fInjectedProj, fInjectedLogPath)
+    for x in listOfMatches:
+        logging.info(" L: %d (C: %s T: %s V: %s)" % (x[0], x[1][0], x[1][1],x[1][2]))
+
+    compilePath = findFirstFile(fInjectedProj, "Makefile").root
+    changeDir(compilePath)
+    compileRunAndSaveLog(fInjectedProj, fInjectedLogPath)
 
 
 # Make diff
