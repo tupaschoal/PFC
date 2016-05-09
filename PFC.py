@@ -93,8 +93,8 @@ def changeDir(path):
     except OSError:
         cleanEnv("Failed to change to directory %s" % path)
 
-# Compile in running directory and saves log
-def compileAndSaveLog(fullPath, cleanLogPath):
+# Compile, run and save log
+def compileRunAndSaveLog(fullPath, cleanLogPath):
     try:
         subprocess.run("make", check=True, \
                        stderr=subprocess.PIPE)
@@ -125,7 +125,7 @@ cleanEnv(0)
 # Goes to project folder, compiles and saves log
 compilePath = findFirstFile(fullPath, "Makefile").root
 changeDir(compilePath)
-compileAndSaveLog(fullPath, cleanLogPath)
+compileRunAndSaveLog(fullPath, cleanLogPath)
 
 # Copies project folder, inject failure, compile and saves log
 try:
@@ -182,7 +182,7 @@ for x in listOfMatches:
 
 compilePath = findFirstFile(fInjectedProj, "Makefile").root
 changeDir(compilePath)
-compileAndSaveLog(fInjectedProj, fInjectedLogPath)
+compileRunAndSaveLog(fInjectedProj, fInjectedLogPath)
 
 
 # Make diff
