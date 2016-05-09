@@ -98,7 +98,7 @@ def compileRunAndSaveLog(fullPath, cleanLogPath):
     try:
         subprocess.run("make", check=True, \
                        stderr=subprocess.PIPE)
-    except subprocess.CalledProcessError:
+    except subprocess.CalledProcessError as e:
         sys.stderr.buffer.write(e.stderr)
         cleanEnv("Failed to compile")
 
@@ -144,7 +144,6 @@ regEx = re.compile( #To match any variable declaration/definition
         '[ ,;\)\[\]]')                                  #Ending in =);,[]
 
 listOfMatches = []
-cppFile = findFirstFile(path, '.cpp')
 for i, line in enumerate(open("src/"+chosenProject+".cpp")):
     for match in re.finditer(regEx,line):
         listOfMatches.append((i+1, match.groups()))
