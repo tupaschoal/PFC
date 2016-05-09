@@ -8,6 +8,7 @@ import shutil      #Copy directories
 import subprocess  #Run shell commands
 import sys         #Exit with error code
 from collections import namedtuple
+from enum import Enum #To list regEx types
 
 chosenProject = "at_1_phase"
 path = "/home/tuliolinux/Downloads/systemc-2.3.1/examples/tlm-seg/"
@@ -32,6 +33,8 @@ randomBool = [  "#include <stdlib.h>\n", \
                 "}\n"]
 
 walkReturn = namedtuple('walkReturn', 'root, file')
+class RegExType(Enum):
+    cppVariables = 1
 
 ### Script Functions ###
 
@@ -149,6 +152,18 @@ def writeMaliciousFile(path):
     with open(path,'w') as f:
         f.writelines(maliciousFile)
 
+def getRegExFromEnum(category):
+    if (category == RegExType.cppVariables):
+        regEx = re.compile( #To match any variable declaration/definition
+                '(const )?'
+                '(bigint|int|float|short|char|bool'             #C++ types
+                '|sc_(?:bit|logic|int|uint|bigint|biguint))'    #SystemC types
+                '(?:\<\w*\>)?'                                  #Support bigint templates
+                '(?:[ \*&] *\*{0,2}&{0,1} *)'                   #Skip *&' '
+                '([A-Z_a-z]\w*)'                                #Variable name
+                '[ ,;\)\[\]]')                                  #Ending in =);,[]
+        return regEx
+
 #### Main Script ####
 logging.basicConfig(stream=sys.stderr, level=logging.NOTSET)
 cleanEnv(0)
@@ -165,15 +180,7 @@ except shutil.Error:
     cleanEnv("Cannot copy tree")
 changeDir(fInjectedProj)
 
-regEx = re.compile( #To match any variable declaration/definition
-        '(const )?'
-        '(bigint|int|float|short|char|bool'             #C++ types
-        '|sc_(?:bit|logic|int|uint|bigint|biguint))'    #SystemC types
-        '(?:\<\w*\>)?'                                  #Support bigint templates
-        '(?:[ \*&] *\*{0,2}&{0,1} *)'                   #Skip *&' '
-        '([A-Z_a-z]\w*)'                                #Variable name
-        '[ ,;\)\[\]]')                                  #Ending in =);,[]
-
+regEx = getRegExFromEnum(RegExType.cppVariables)
 listOfMatches = parseFileWithRegEx(regEx, "src/"+chosenProject+".cpp")
 contents = getFileContent("src/"+chosenProject+'.cpp')
 
