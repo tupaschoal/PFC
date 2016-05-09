@@ -1,4 +1,5 @@
 #!/usr/local/bin/python3.5
+import copy        #For deep copying
 import filecmp     #Compare execution outputs
 import logging     #Ease use of debugging messages
 import os          #Change folders/create/copy/delete
@@ -12,7 +13,7 @@ from enum import Enum #To list regEx types
 
 chosenProject = "at_1_phase"
 path = "/home/tuliolinux/Downloads/systemc-2.3.1/examples/tlm-seg/"
-chosenProject = "rsa"
+chosenProject = "pipe"
 path = "/home/tuliolinux/Downloads/systemc-2.3.1/examples/sysc/"
 fullPath = path+chosenProject
 cleanLogPath = "/tmp/cleanBuildLog"
@@ -64,7 +65,8 @@ def cleanEnv(error):
 def randomValue(dataType):
     if dataType == "char":
         return random.randint(-128,127)
-    elif dataType == "float":
+    elif dataType == "float" or \
+         dataType == "double":
         return random.random()
     elif dataType == "short":
         return random.randint(-32768, 32767)
@@ -114,7 +116,7 @@ def compileRunAndSaveLog(fullPath, cleanLogPath):
                        stderr=subprocess.PIPE)
     except subprocess.CalledProcessError as e:
         sys.stderr.buffer.write(e.stderr)
-        cleanEnv("Failed to compile")
+        print("Failed to compile")
 
     try:
         out = subprocess.run("./"+findFirstFile(fullPath, ".x").file, check=True, \
@@ -128,7 +130,7 @@ def compileRunAndSaveLog(fullPath, cleanLogPath):
         except OSError:
             cleanEnv("Failed to use file")
     except subprocess.TimeoutExpired:
-        cleanEnv("Process ended with timeout")
+        print("Process ended with timeout")
     except subprocess.CalledProcessError:
         cleanEnv("Failed to run")
 
@@ -149,7 +151,7 @@ def parseFileWithRegEx(regEx, path):
 
 # Create malicious file by injecting fault at line of original
 def createMaliciousFile(original, line, injectedContent):
-    contents = original
+    contents = copy.deepcopy(original)
     if re.search('\{', contents[line]):
         line += 1
     logging.info(" Inserting: %s into line %s" % (injectedContent, str(line)))
@@ -160,7 +162,7 @@ def createMaliciousFile(original, line, injectedContent):
     return maliciousFile
 
 # Overwrite a file with the malicious code
-def writeMaliciousFile(path):
+def writeMaliciousFile(path, maliciousFile):
     with open(path,'w') as f:
         f.writelines(maliciousFile)
 
@@ -169,7 +171,7 @@ def getRegExFromEnum(category):
     if (category == RegExType.cppVariables):
         regEx = re.compile( #To match any variable declaration/definition
                 '(const )?'
-                '(bigint|int|float|short|char|bool'             #C++ types
+                '(bigint|int|float|short|char|bool|double'      #C++ types
                 '|sc_(?:bit|logic|int|uint|bigint|biguint))'    #SystemC types
                 '(?:\<\w*\>)?'                                  #Support bigint templates
                 '(?:[ \*&] *\*{0,2}&{0,1} *)'                   #Skip *&' '
@@ -190,9 +192,9 @@ def getRandomDataToInject(listOfMatches, category):
             rData = data(listOfMatches[i][0],\
                          listOfMatches[i][1][2],\
                          listOfMatches[i][1][1])
-            injectedContent = "%s = randomBool() ? %d : %s;\n" % (rData.var,\
-                                                                  randomValue(rData.type),\
-                                                                  rData.var)
+            injectedContent = "{0} = randomBool() ? {1} : {2};\n".format(rData.var,\
+                                                                         randomValue(rData.type),\
+                                                                         rData.var)
             return fault(rData.line, injectedContent)
     else:
         return 0
@@ -212,9 +214,9 @@ def getDataToInject(listOfMatches, i, category):
         rData = data(listOfMatches[i][0],\
                      listOfMatches[i][1][2],\
                      listOfMatches[i][1][1])
-        injectedContent = "%s = randomBool() ? %d : %s;\n" % (rData.var,\
-                                                              randomValue(rData.type),\
-                                                              rData.var)
+        injectedContent = "{0} = randomBool() ? {1} : {2};\n".format(rData.var,\
+                                                                     randomValue(rData.type),\
+                                                                     rData.var)
         return fault(rData.line, injectedContent)
 
 #### Main Script ####
@@ -241,16 +243,17 @@ for element in rFiles:
     listOfMatches = parseFileWithRegEx(regEx, chosenFile)
     contents = getFileContent(chosenFile)
     injectionData = getRandomDataToInject(listOfMatches, RegExType.cppVariables)
-    maliciousFile = createMaliciousFile(contents, injectionData.line, injectionData.data)
-    writeMaliciousFile(chosenFile)
+    if (injectionData != 0):
+        maliciousFile = createMaliciousFile(contents, injectionData.line, injectionData.data)
+        writeMaliciousFile(chosenFile, maliciousFile)
 
-    for x in listOfMatches:
-        logging.info(" L: %d (C: %s T: %s V: %s)" % (x[0], x[1][0], x[1][1],x[1][2]))
+        for x in listOfMatches:
+            logging.info(" L: %d (C: %s T: %s V: %s)" % (x[0], x[1][0], x[1][1],x[1][2]))
 
-    compilePath = findFirstFile(fInjectedProj, "Makefile").root
-    changeDir(compilePath)
-    compileRunAndSaveLog(fInjectedProj, fInjectedLogPath)
-
+        compilePath = findFirstFile(fInjectedProj, "Makefile").root
+        changeDir(compilePath)
+        compileRunAndSaveLog(fInjectedProj, fInjectedLogPath)
+        writeMaliciousFile(chosenFile, contents)
 
 # Make diff
 comparison = filecmp.cmp(cleanLogPath, fInjectedLogPath)
