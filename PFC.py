@@ -93,6 +93,31 @@ def changeDir(path):
     except OSError:
         cleanEnv("Failed to change to directory %s" % path)
 
+# Compile in running directory and saves log
+def compileAndSaveLog(fullPath, cleanLogPath):
+    try:
+        subprocess.run("make", check=True, \
+                       stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError:
+        sys.stderr.buffer.write(e.stderr)
+        cleanEnv("Failed to compile")
+
+    try:
+        out = subprocess.run("./"+findFirstFile(fullPath, ".x").file, check=True, \
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, \
+                             timeout=20)
+        try:
+            f = open(cleanLogPath,'w+b')
+            f.write(out.stdout)
+            f.write(out.stderr)
+            f.close()
+        except OSError:
+            cleanEnv("Failed to use file")
+    except subprocess.TimeoutExpired:
+        cleanEnv("Process ended with timeout")
+    except subprocess.CalledProcessError:
+        cleanEnv("Failed to run")
+
 #### Main Script ####
 logging.basicConfig(stream=sys.stderr, level=logging.NOTSET)
 cleanEnv(0)
@@ -100,27 +125,7 @@ cleanEnv(0)
 # Goes to project folder, compiles and saves log
 compilePath = findFirstFile(fullPath, "Makefile").root
 changeDir(compilePath)
-
-try:
-    subprocess.run("make", check=True)
-except subprocess.CalledProcessError:
-    cleanEnv("Failed to compile")
-
-try:
-    out = subprocess.run("./"+findFirstFile(fullPath, ".x").file, check=True, \
-                         stdout=subprocess.PIPE, stderr=subprocess.PIPE, \
-                         timeout=20)
-    try:
-        f = open(cleanLogPath,'w+b')
-        f.write(out.stdout)
-        f.write(out.stderr)
-        f.close()
-    except OSError:
-        cleanEnv("Failed to use file")
-except subprocess.TimeoutExpired:
-    cleanEnv("Process ended with timeout")
-except subprocess.CalledProcessError:
-    cleanEnv("Failed to run")
+compileAndSaveLog(fullPath, cleanLogPath)
 
 # Copies project folder, inject failure, compile and saves log
 try:
@@ -177,29 +182,8 @@ for x in listOfMatches:
 
 compilePath = findFirstFile(fInjectedProj, "Makefile").root
 changeDir(compilePath)
+compileAndSaveLog(fInjectedProj, fInjectedLogPath)
 
-try:
-    subprocess.run("make", check=True, \
-                   stderr=subprocess.PIPE)
-except subprocess.CalledProcessError as e:
-    sys.stderr.buffer.write(e.stderr)
-    cleanEnv("Failed to compile fault injected project")
-
-try:
-    out = subprocess.run("./"+findFirstFile(fInjectedProj, ".x").file, check=True, \
-                         stdout=subprocess.PIPE, stderr=subprocess.PIPE, \
-                         timeout=20)
-    try:
-        f = open(fInjectedLogPath,'w+b')
-        f.write(out.stdout)
-        f.write(out.stderr)
-        f.close()
-    except OSError:
-        cleanEnv("Failed to use file")
-except subprocess.TimeoutExpired:
-    cleanEnv("Process ended with timeout")
-except subprocess.CalledProcessError:
-    cleanEnv("Failed to run")
 
 # Make diff
 comparison = filecmp.cmp(cleanLogPath, fInjectedLogPath)
