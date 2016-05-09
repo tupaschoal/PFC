@@ -33,6 +33,8 @@ randomBool = [  "#include <stdlib.h>\n", \
                 "}\n"]
 
 walkReturn = namedtuple('walkReturn', 'root, file')
+data = namedtuple('data', 'line, var, type')
+fault = namedtuple('fault', 'line, data')
 class RegExType(Enum):
     cppVariables = 1
 
@@ -166,6 +168,46 @@ def getRegExFromEnum(category):
                 '[ ,;\)\[\]]')                                  #Ending in =);,[]
         return regEx
 
+# Parses matches to choose data to inject
+def getRandomDataToInject(listOfMatches, category):
+    if (len(listOfMatches) > 0):
+        i = 0
+        chooseV = False
+        if (category == RegExType.cppVariables):
+            while not chooseV:
+                i = random.randint(0, len(listOfMatches) -1)
+                chooseV = listOfMatches[i][1][2] != "sc_main" and\
+                          listOfMatches[i][1][0] != "const "
+            rData = data(listOfMatches[i][0],\
+                         listOfMatches[i][1][2],\
+                         listOfMatches[i][1][1])
+            injectedContent = "%s = randomBool() ? %d : %s;\n" % (rData.var,\
+                                                                  randomValue(rData.type),\
+                                                                  rData.var)
+            return fault(rData.line, injectedContent)
+    else:
+        return 0
+
+# Returns next valid data to inject
+def getDataToInject(listOfMatches, i, category):
+    chooseV = False
+    if (category == RegExType.cppVariables):
+        while not chooseV:
+            if (len(listOfMatches) > 0 and len(listOfMatches) < i):
+                chooseV = listOfMatches[i][1][2] != "sc_main" and\
+                          listOfMatches[i][1][0] != "const "
+                if (not chooseV):
+                    i += 1
+            else:
+                return 0
+        rData = data(listOfMatches[i][0],\
+                     listOfMatches[i][1][2],\
+                     listOfMatches[i][1][1])
+        injectedContent = "%s = randomBool() ? %d : %s;\n" % (rData.var,\
+                                                              randomValue(rData.type),\
+                                                              rData.var)
+        return fault(rData.line, injectedContent)
+
 #### Main Script ####
 logging.basicConfig(stream=sys.stderr, level=logging.NOTSET)
 cleanEnv(0)
@@ -185,20 +227,8 @@ changeDir(fInjectedProj)
 regEx = getRegExFromEnum(RegExType.cppVariables)
 listOfMatches = parseFileWithRegEx(regEx, "src/"+chosenProject+".cpp")
 contents = getFileContent("src/"+chosenProject+'.cpp')
-
-chooseV = False
-i = 0
-while not chooseV:
-    i = random.randint(0, len(listOfMatches) -1)
-    chooseV = listOfMatches[i][1][2] != "sc_main" and\
-              listOfMatches[i][1][0] != "const "
-
-line = listOfMatches[i][0]
-dataType = listOfMatches[i][1][1]
-varName = listOfMatches[i][1][2]
-val = randomValue(dataType)
-injectedContent = "%s = randomBool() ? %d : %s;\n" % (varName, val, varName)
-maliciousFile = createMaliciousFile(contents, line, injectedContent)
+injectionData = getRandomDataToInject(listOfMatches, RegExType.cppVariables)
+maliciousFile = createMaliciousFile(contents, injectionData.line, injectionData.data)
 writeMaliciousFile("src/"+chosenProject+'.cpp')
 
 for x in listOfMatches:
