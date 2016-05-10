@@ -11,10 +11,10 @@ import sys         #Exit with error code
 from collections import namedtuple
 from enum import Enum #To list regEx types
 
-chosenProject = "at_1_phase"
-path = "/home/tuliolinux/Downloads/systemc-2.3.1/examples/tlm-seg/"
 chosenProject = "pipe"
 path = "/home/tuliolinux/Downloads/systemc-2.3.1/examples/sysc/"
+chosenProject = "at_1_phase"
+path = "/home/tuliolinux/Downloads/systemc-2.3.1/examples/tlm-seg/"
 fullPath = path+chosenProject
 cleanLogPath = "/tmp/cleanBuildLog"
 fInjectedLogPath = "/tmp/fInjectedBuildLog"
@@ -170,7 +170,7 @@ def writeMaliciousFile(path, maliciousFile):
 def getRegExFromEnum(category):
     if (category == RegExType.cppVariables):
         regEx = re.compile( #To match any variable declaration/definition
-                '(const )?'
+                '(const |[^A-Za-z])'
                 '(bigint|int|float|short|char|bool|double'      #C++ types
                 '|sc_(?:bit|logic|int|uint|bigint|biguint))'    #SystemC types
                 '(?:\<\w*\>)?'                                  #Support bigint templates
