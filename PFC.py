@@ -11,7 +11,7 @@ import sys         #Exit with error code
 from collections import namedtuple
 from enum import Enum #To list regEx types
 
-chosenProject = "pipe"
+chosenProject = "rsa"
 path = "/home/tuliolinux/Downloads/systemc-2.3.1/examples/sysc/"
 chosenProject = "at_1_phase"
 path = "/home/tuliolinux/Downloads/systemc-2.3.1/examples/tlm-seg/"
@@ -37,7 +37,8 @@ walkReturn = namedtuple('walkReturn', 'root, file')
 data = namedtuple('data', 'line, var, type')
 fault = namedtuple('fault', 'line, data')
 class RegExType(Enum):
-    cppVariables = 1
+    CPPVariables = 1
+    TLMPayload   = 2
 
 ### Script Functions ###
 
@@ -168,7 +169,7 @@ def writeMaliciousFile(path, maliciousFile):
 
 # Returns a regular expression given an enum value
 def getRegExFromEnum(category):
-    if (category == RegExType.cppVariables):
+    if (category == RegExType.CPPVariables):
         regEx = re.compile( #To match any variable declaration/definition
                 '(const |[^A-Za-z])'
                 '(bigint|int|float|short|char|bool|double'      #C++ types
@@ -178,13 +179,21 @@ def getRegExFromEnum(category):
                 '([A-Z_a-z]\w*)'                                #Variable name
                 '[ ,;\)\[\]]')                                  #Ending in =);,[]
         return regEx
+    elif (category == RegExType.TLMPayload):
+        regEx = re.compile( #To find TLM communications
+                 '(?:->)'                                       # Finds operation
+                 '(?:nb_transport_[bf]w|(?:b_transport))'       # Matches transport types
+                 ' *\( *\* *'                                   # Skip delimiters
+                 '([A-Z_a-z]\w*)'                               # Get Payload
+                 '[$ ,\n]')                                     # End matching
+        return regEx
 
 # Parses matches to choose data to inject
 def getRandomDataToInject(listOfMatches, category):
     if (len(listOfMatches) > 0):
         i = 0
         chooseV = False
-        if (category == RegExType.cppVariables):
+        if (category == RegExType.CPPVariables):
             while not chooseV:
                 i = random.randint(0, len(listOfMatches) -1)
                 chooseV = listOfMatches[i][1][2] != "sc_main" and\
@@ -202,7 +211,7 @@ def getRandomDataToInject(listOfMatches, category):
 # Returns next valid data to inject
 def getDataToInject(listOfMatches, i, category):
     chooseV = False
-    if (category == RegExType.cppVariables):
+    if (category == RegExType.CPPVariables):
         while not chooseV:
             if (len(listOfMatches) > 0 and len(listOfMatches) < i):
                 chooseV = listOfMatches[i][1][2] != "sc_main" and\
@@ -239,10 +248,10 @@ rFiles = findAllFiles(fInjectedProj, ".cpp")
 
 for element in rFiles:
     chosenFile = element.root + "/" + element.file
-    regEx = getRegExFromEnum(RegExType.cppVariables)
+    regEx = getRegExFromEnum(RegExType.CPPVariables)
     listOfMatches = parseFileWithRegEx(regEx, chosenFile)
     contents = getFileContent(chosenFile)
-    injectionData = getRandomDataToInject(listOfMatches, RegExType.cppVariables)
+    injectionData = getRandomDataToInject(listOfMatches, RegExType.CPPVariables)
     if (injectionData != 0):
         maliciousFile = createMaliciousFile(contents, injectionData.line, injectionData.data)
         writeMaliciousFile(chosenFile, maliciousFile)
