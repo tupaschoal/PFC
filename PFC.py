@@ -34,10 +34,14 @@ randomBool = [  "#include <stdlib.h>\n", \
                 "}\n"]
 
 failedPayload = [ "#include \"tlm.h\"\n", \
-                  "static tlm::tlm_generic_payload *dummy_trr\n", \
-                  "dummy_tr->set_address(10)\n", \
-                  "dummy_tr->set_data_length(10)\n", \
-                  "dummy_tr->set_response_status(tlm::TLM_INCOMPLETE_RESPONSE)\n"]
+                  "static tlm::tlm_generic_payload *dummy_trr;\n", \
+                  "bool run() {\n", \
+                      "dummy_trr->set_address(10);\n", \
+                      "dummy_trr->set_data_length(10);\n", \
+                      "dummy_trr->set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);\n",
+                      "return true;\n",
+                  "}\n",
+                  "bool bla = run();\n"]
 
 walkReturn = namedtuple('walkReturn', 'root, file')
 data = namedtuple('data', 'line, var, type')
