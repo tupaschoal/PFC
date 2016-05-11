@@ -215,6 +215,9 @@ def getRandomDataToInject(listOfMatches, category):
                                                                          randomValue(rData.type),\
                                                                          rData.var)
             return fault(rData.line, injectedContent)
+        if (category == RegExType.TLMPayload):
+            i = random.randint(0, len(listOfMatches) -1)
+            return listOfMatches[i]
     else:
         return 0
 
@@ -237,6 +240,11 @@ def getDataToInject(listOfMatches, i, category):
                                                                      randomValue(rData.type),\
                                                                      rData.var)
         return fault(rData.line, injectedContent)
+    if (category == RegExType.TLMPayload):
+        if (len(listOfMatches) > 0 and len(listOfMatches) < i):
+            return listOfMatches[i]
+        else:
+            return 0
 
 #### Main Script ####
 logging.basicConfig(stream=sys.stderr, level=logging.NOTSET)
