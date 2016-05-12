@@ -34,7 +34,7 @@ randomBool = [  "#include <stdlib.h>\n", \
                 "}\n"]
 
 failedPayload = [ "#include \"tlm.h\"\n", \
-                  "static tlm::tlm_generic_payload *dummy_trr;\n", \
+                  "static tlm::tlm_generic_payload *dummy_trr = new tlm::tlm_generic_payload;\n", \
                   "bool run() {\n", \
                       "dummy_trr->set_address(10);\n", \
                       "dummy_trr->set_data_length(10);\n", \
@@ -45,7 +45,7 @@ failedPayload = [ "#include \"tlm.h\"\n", \
 
 walkReturn = namedtuple('walkReturn', 'root, file')
 data = namedtuple('data', 'line, var, type')
-fault = namedtuple('fault', 'line, data')
+fault = namedtuple('fault', 'line, data, var')
 class RegExType(Enum):
     CPPVariables = 1
     TLMPayload   = 2
@@ -109,7 +109,6 @@ def findAllFiles(walkingPath, fileToFind):
     for root, dirs, files in os.walk(walkingPath):
         for file in files:
             if file.endswith(fileToFind):
-                print(root, file)
                 rFiles.append(walkReturn(root, file))
     return rFiles
 
@@ -161,15 +160,25 @@ def parseFileWithRegEx(regEx, path):
     return listOfMatches
 
 # Create malicious file by injecting fault at line of original
-def createMaliciousFile(original, line, injectedContent):
+def createMaliciousFile(original, injectedContent, category):
     contents = copy.deepcopy(original)
-    if re.search('\{', contents[line]):
-        line += 1
-    logging.info(" Inserting: %s into line %s" % (injectedContent, str(line)))
-    contents.insert(line, injectedContent)
-    maliciousFile = []
-    maliciousFile.extend(randomBool)
-    maliciousFile.extend(contents)
+    if (category == RegExType.CPPVariables):
+        line = injectedContent.line
+        if re.search('\{', contents[line]):
+            line += 1
+        contents.insert(line, injectedContent.data)
+        maliciousFile = []
+        maliciousFile.extend(randomBool)
+        maliciousFile.extend(contents)
+    elif (category == RegExType.TLMPayload):
+        line = injectedContent.line - 1
+        contents[line] = re.sub('\*', '', contents[line]) #Removes first dereference
+        contents[line] = re.sub(str(injectedContent.var), injectedContent.data, contents[line]) #Replace var with fault injected version
+        maliciousFile = []
+        maliciousFile.extend(randomBool)
+        maliciousFile.extend(failedPayload)
+        maliciousFile.extend(contents)
+    logging.info(" Inserting: %s into line %s" % (injectedContent.data, str(line)))
     return maliciousFile
 
 # Overwrite a file with the malicious code
@@ -214,10 +223,12 @@ def getRandomDataToInject(listOfMatches, category):
             injectedContent = "{0} = randomBool() ? {1} : {2};\n".format(rData.var,\
                                                                          randomValue(rData.type),\
                                                                          rData.var)
-            return fault(rData.line, injectedContent)
+            return fault(rData.line, injectedContent, 0)
         if (category == RegExType.TLMPayload):
+            print(listOfMatches)
             i = random.randint(0, len(listOfMatches) -1)
-            return listOfMatches[i]
+            injectedContent = "randomBool() ? *dummy_trr:*{0}".format(listOfMatches[i][1][0])
+            return fault(listOfMatches[i][0], injectedContent, listOfMatches[i][1][0])
     else:
         return 0
 
@@ -239,10 +250,12 @@ def getDataToInject(listOfMatches, i, category):
         injectedContent = "{0} = randomBool() ? {1} : {2};\n".format(rData.var,\
                                                                      randomValue(rData.type),\
                                                                      rData.var)
-        return fault(rData.line, injectedContent)
+        return fault(rData.line, injectedContent, 0)
     if (category == RegExType.TLMPayload):
+        print(listOfMatches)
         if (len(listOfMatches) > 0 and len(listOfMatches) < i):
-            return listOfMatches[i]
+            injectedContent = "randomBool() ? *dummy_trr:*{0}".format(listOfMatches[i][1][0])
+            return fault(listOfMatches[i][0], injectedContent, listOfMatches[i][1][0])
         else:
             return 0
 
@@ -263,19 +276,24 @@ except shutil.Error:
 changeDir(fInjectedProj)
 
 rFiles = findAllFiles(fInjectedProj, ".cpp")
+cat = RegExType.CPPVariables
+cat = RegExType.TLMPayload
 
 for element in rFiles:
     chosenFile = element.root + "/" + element.file
-    regEx = getRegExFromEnum(RegExType.CPPVariables)
+    regEx = getRegExFromEnum(cat)
     listOfMatches = parseFileWithRegEx(regEx, chosenFile)
     contents = getFileContent(chosenFile)
-    injectionData = getRandomDataToInject(listOfMatches, RegExType.CPPVariables)
+    injectionData = getRandomDataToInject(listOfMatches, cat)
     if (injectionData != 0):
-        maliciousFile = createMaliciousFile(contents, injectionData.line, injectionData.data)
+        maliciousFile = createMaliciousFile(contents, injectionData, cat)
         writeMaliciousFile(chosenFile, maliciousFile)
 
         for x in listOfMatches:
-            logging.info(" L: %d (C: %s T: %s V: %s)" % (x[0], x[1][0], x[1][1],x[1][2]))
+            if (cat == RegExType.CPPVariables):
+                logging.info(" L: %d (C: %s T: %s V: %s)" % (x[0], x[1][0], x[1][1],x[1][2]))
+            elif (cat == RegExType.TLMPayload):
+                logging.info(" L: %d (V: %s)" % (x[0], x[1][0]))
 
         compilePath = findFirstFile(fInjectedProj, "Makefile").root
         changeDir(compilePath)
