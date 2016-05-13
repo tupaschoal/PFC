@@ -50,6 +50,14 @@ class RegExType(Enum):
     CPPVariables = 1
     TLMPayload   = 2
 
+class MakeRunStatus(Enum):
+    CompilationFailed = 1
+    ExecutionFailed   = 2
+    ExecutionSucceded = 3
+    ExecutionTimeout  = 4
+    FileOutputFailed  = 5
+
+
 ### Script Functions ###
 
 def cleanFileOrDir(path):
@@ -126,7 +134,8 @@ def compileRunAndSaveLog(fullPath, cleanLogPath):
                        stderr=subprocess.PIPE)
     except subprocess.CalledProcessError as e:
         sys.stderr.buffer.write(e.stderr)
-        print("Failed to compile")
+        logging.error("Failed to compile")
+        return MakeRunStatus.CompilationFailed
 
     try:
         out = subprocess.run("./"+findFirstFile(fullPath, ".x").file, check=True, \
@@ -138,11 +147,16 @@ def compileRunAndSaveLog(fullPath, cleanLogPath):
             f.write(out.stderr)
             f.close()
         except OSError:
-            cleanEnv("Failed to use file")
+            logging.warning("Failed to use file")
+            return MakeRunStatus.FileOutputFailed
     except subprocess.TimeoutExpired:
-        print("Process ended with timeout")
+        logging.info("Process ended with timeout")
+        return MakeRunStatus.ExecutionTimeout
     except subprocess.CalledProcessError:
-        cleanEnv("Failed to run")
+        logging.error("Failed to run")
+        return MakeRunStatus.ExecutionFailed
+    logging.info("Execution Succesful")
+    return MakeRunStatus.ExecutionSucceded
 
 # Get file content
 def getFileContent(filePath):
@@ -209,6 +223,7 @@ def getRegExFromEnum(category):
 
 # Parses matches to choose data to inject
 def getRandomDataToInject(listOfMatches, category):
+    logging.debug(listOfMatches)
     if (len(listOfMatches) > 0):
         i = 0
         chooseV = False
@@ -225,7 +240,6 @@ def getRandomDataToInject(listOfMatches, category):
                                                                          rData.var)
             return fault(rData.line, injectedContent, 0)
         if (category == RegExType.TLMPayload):
-            print(listOfMatches)
             i = random.randint(0, len(listOfMatches) -1)
             injectedContent = "randomBool() ? *dummy_trr:*{0}".format(listOfMatches[i][1][0])
             return fault(listOfMatches[i][0], injectedContent, listOfMatches[i][1][0])
@@ -235,6 +249,7 @@ def getRandomDataToInject(listOfMatches, category):
 # Returns next valid data to inject
 def getDataToInject(listOfMatches, i, category):
     chooseV = False
+    logging.debug(listOfMatches)
     if (category == RegExType.CPPVariables):
         while not chooseV:
             if (len(listOfMatches) > 0 and len(listOfMatches) < i):
@@ -252,7 +267,6 @@ def getDataToInject(listOfMatches, i, category):
                                                                      rData.var)
         return fault(rData.line, injectedContent, 0)
     if (category == RegExType.TLMPayload):
-        print(listOfMatches)
         if (len(listOfMatches) > 0 and len(listOfMatches) < i):
             injectedContent = "randomBool() ? *dummy_trr:*{0}".format(listOfMatches[i][1][0])
             return fault(listOfMatches[i][0], injectedContent, listOfMatches[i][1][0])
@@ -260,7 +274,7 @@ def getDataToInject(listOfMatches, i, category):
             return 0
 
 #### Main Script ####
-logging.basicConfig(stream=sys.stderr, level=logging.NOTSET)
+logging.basicConfig(stream=sys.stderr, level=logging.CRITICAL)
 cleanEnv(0)
 
 # Goes to project folder, compiles and saves log
@@ -307,7 +321,7 @@ try:
     f.write(str(comparison))
     f.close()
 except OSError:
-    cleanEnv("Failed to use file")
+    logging.error("Failed to use file")
 
 # Cleanup routines, delete logs and folders
 cleanEnv("Program ran successfully")
