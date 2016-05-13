@@ -8,7 +8,7 @@ import re          #Use regEx as search pattern
 import shutil      #Copy directories
 import subprocess  #Run shell commands
 import sys         #Exit with error code
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 from enum import Enum #To list regEx types
 
 chosenProject = "rsa"
@@ -276,6 +276,7 @@ def getDataToInject(listOfMatches, i, category):
 #### Main Script ####
 logging.basicConfig(stream=sys.stderr, level=logging.CRITICAL)
 cleanEnv(0)
+executionStatus = defaultdict(list)
 
 # Goes to project folder, compiles and saves log
 compilePath = findFirstFile(fullPath, "Makefile").root
@@ -311,7 +312,7 @@ for element in rFiles:
 
         compilePath = findFirstFile(fInjectedProj, "Makefile").root
         changeDir(compilePath)
-        compileRunAndSaveLog(fInjectedProj, fInjectedLogPath)
+        executionStatus[chosenProject].append(compileRunAndSaveLog(fInjectedProj, fInjectedLogPath))
         writeMaliciousFile(chosenFile, contents)
 
 # Make diff
