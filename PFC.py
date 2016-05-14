@@ -257,7 +257,7 @@ def getDataToInject(listOfMatches, i, category):
                                                                      rData.var)
         return fault(rData.line, injectedContent, 0)
     if (category == RegExType.TLMPayload):
-        if (len(listOfMatches) > 0 and len(listOfMatches) < i):
+        if (len(listOfMatches) > 0 and i < len(listOfMatches)):
             injectedContent = "randomBool() ? *dummy_trr:*{0}".format(listOfMatches[i][1][0])
             return fault(listOfMatches[i][0], injectedContent, listOfMatches[i][1][0])
         else:
@@ -274,9 +274,9 @@ diffPath = "/tmp/diff"
 sysCProjs = ['dpipe', 'fft_flpt', 'fft_fxpt', 'fir', 'forkjoin', 'pipe', 'pkt_switch', 'reset_signal_is', 'risc_cpu', 'rsa', 'sc_export', 'sc_report', 'sc_rvd', 'sc_ttd', 'scx_barrier', 'scx_mutex_w_policy', 'simple_bus', 'simple_fifo', 'simple_perf', 'specialized_signals']
 tlmProjs = ['at_1_phase', 'at_2_phase', 'at_4_phase', 'at_extension_optional', 'at_mixed_targets', 'at_ooo', 'lt', 'lt_dmi', 'lt_extension_mandatory', 'lt_mixed_endian', 'lt_temporal_decouple']
 
-path = "/home/tuliolinux/Downloads/systemc-2.3.1/examples/tlm-seg/"
-for proj in sysCProjs: 
+for proj in tlmProjs:
     path = "/home/tuliolinux/Downloads/systemc-2.3.1/examples/sysc/"
+    path = "/home/tuliolinux/Downloads/systemc-2.3.1/examples/tlm-seg/"
     chosenProject = proj
     fullPath = path+chosenProject
     fInjectedProj = path+"fij"
@@ -294,8 +294,8 @@ for proj in sysCProjs:
     changeDir(fInjectedProj)
 
     rFiles = findAllFiles(fInjectedProj, ".cpp")
-    #cat = RegExType.TLMPayload
-    cat = RegExType.CPPVariables
+    cat = RegExType.TLMPayload
+    #cat = RegExType.CPPVariables
 
     for element in rFiles:
         chosenFile = element.root + "/" + element.file
