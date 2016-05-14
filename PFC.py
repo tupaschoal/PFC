@@ -11,17 +11,7 @@ import sys         #Exit with error code
 from collections import namedtuple, defaultdict
 from enum import Enum #To list regEx types
 
-chosenProject = "rsa"
-path = "/home/tuliolinux/Downloads/systemc-2.3.1/examples/sysc/"
-chosenProject = "at_1_phase"
-path = "/home/tuliolinux/Downloads/systemc-2.3.1/examples/tlm-seg/"
-fullPath = path+chosenProject
-cleanLogPath = "/tmp/cleanBuildLog"
-fInjectedLogPath = "/tmp/fInjectedBuildLog"
-fInjectedProj = path+"fij"
-diffPath = "/tmp/diff"
 d = 2
-
 randomBool = [  "#include <stdlib.h>\n", \
                 "#include <time.h>\n", \
                 "static bool init = false;\n", \
@@ -275,44 +265,57 @@ def getDataToInject(listOfMatches, i, category):
 
 #### Main Script ####
 logging.basicConfig(stream=sys.stderr, level=logging.CRITICAL)
-cleanEnv(0)
 executionStatus = defaultdict(list)
+chosenProject = "at_1_phase"
+path = "/home/tuliolinux/Downloads/systemc-2.3.1/examples/tlm-seg/"
+chosenProject = "fft_fxpt"
+cleanLogPath = "/tmp/cleanBuildLog"
+fInjectedLogPath = "/tmp/fInjectedBuildLog"
+diffPath = "/tmp/diff"
+sysCProjs = ['dpipe', 'fft_flpt', 'fft_fxpt', 'fir', 'forkjoin', 'pipe', 'pkt_switch', 'reset_signal_ls', 'risc_cpu', 'rsa', 'sc_export', 'sc_report', 'sc_rvd', 'sc_ttd', 'scx_barrier', 'scx_mutex_w_policy', 'simple_bus', 'simple_fifo', 'simple_perf', 'specialized_signals']
+tlmProjs = ['at_1_phase', 'at_2_phase', 'at_4_phase', 'at_extension_optional', 'at_mixed_targets', 'at_ooo', 'lt', 'lt_dmi', 'lt_extension_mandatory', 'lt_mixed_endian', 'lt_temporal_decouple']
 
-# Goes to project folder, compiles and saves log
-compilePath = findFirstFile(fullPath, "Makefile").root
-changeDir(compilePath)
-compileRunAndSaveLog(fullPath, cleanLogPath)
+for proj in sysCProjs: 
+    path = "/home/tuliolinux/Downloads/systemc-2.3.1/examples/sysc/"
+    chosenProject = proj
+    fullPath = path+chosenProject
+    fInjectedProj = path+"fij"
+    cleanEnv(0)
+    # Goes to project folder, compiles and saves log
+    compilePath = findFirstFile(fullPath, "Makefile").root
+    changeDir(compilePath)
+    compileRunAndSaveLog(fullPath, cleanLogPath)
 
-# Copies project folder, inject failure, compile and saves log
-try:
-    shutil.copytree(fullPath, fInjectedProj)
-except shutil.Error:
-    cleanEnv("Cannot copy tree")
-changeDir(fInjectedProj)
+    # Copies project folder, inject failure, compile and saves log
+    try:
+        shutil.copytree(fullPath, fInjectedProj)
+    except shutil.Error:
+        cleanEnv("Cannot copy tree")
+    changeDir(fInjectedProj)
 
-rFiles = findAllFiles(fInjectedProj, ".cpp")
-cat = RegExType.CPPVariables
-cat = RegExType.TLMPayload
+    rFiles = findAllFiles(fInjectedProj, ".cpp")
+    cat = RegExType.TLMPayload
+    cat = RegExType.CPPVariables
 
-for element in rFiles:
-    chosenFile = element.root + "/" + element.file
-    regEx = getRegExFromEnum(cat)
-    listOfMatches = parseFileWithRegEx(regEx, chosenFile)
-    contents = getFileContent(chosenFile)
-    injectionData = getRandomDataToInject(listOfMatches, cat)
-    if (injectionData != 0):
-        maliciousFile = createMaliciousFile(contents, injectionData, cat)
-        writeMaliciousFile(chosenFile, maliciousFile)
+    for element in rFiles:
+        chosenFile = element.root + "/" + element.file
+        regEx = getRegExFromEnum(cat)
+        listOfMatches = parseFileWithRegEx(regEx, chosenFile)
+        contents = getFileContent(chosenFile)
+        injectionData = getRandomDataToInject(listOfMatches, cat)
+        if (injectionData != 0):
+            maliciousFile = createMaliciousFile(contents, injectionData, cat)
+            writeMaliciousFile(chosenFile, maliciousFile)
 
-        for x in listOfMatches:
-            if (cat == RegExType.CPPVariables):
-                logging.info(" L: %d (C: %s T: %s V: %s)" % (x[0], x[1][0], x[1][1],x[1][2]))
-            elif (cat == RegExType.TLMPayload):
-                logging.info(" L: %d (V: %s)" % (x[0], x[1][0]))
+            for x in listOfMatches:
+                if (cat == RegExType.CPPVariables):
+                    logging.info(" L: %d (C: %s T: %s V: %s)" % (x[0], x[1][0], x[1][1],x[1][2]))
+                elif (cat == RegExType.TLMPayload):
+                    logging.info(" L: %d (V: %s)" % (x[0], x[1][0]))
 
-        compilePath = findFirstFile(fInjectedProj, "Makefile").root
-        changeDir(compilePath)
-        executionStatus[chosenProject].append(compileRunAndSaveLog(fInjectedProj, fInjectedLogPath))
+            compilePath = findFirstFile(fInjectedProj, "Makefile").root
+            changeDir(compilePath)
+            executionStatus[chosenProject].append(compileRunAndSaveLog(fInjectedProj, fInjectedLogPath))
         writeMaliciousFile(chosenFile, contents)
 
 # Make diff
